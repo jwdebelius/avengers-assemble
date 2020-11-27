@@ -1,0 +1,124 @@
+outdir: 'ipynb/data/output'
+threads: 5
+
+output:
+  tables:
+    outdir: 'ipynb/data/output'
+    dataset: 
+      - real
+      - simulation
+    method:
+      - reference
+      - otus 
+      - asvs 
+      - sidle
+    artifact:
+      - taxonomy 
+      - table
+  trees:
+    outdir: 'ipynb/data/output'
+    dataset: 
+      - simulation
+    method:
+      - reference
+      - otus 
+      - asvs 
+      - sidle
+    artifact:
+      - tree
+
+real:
+  perc_identity: 0.99
+  regions:
+    - v13
+    - v34
+  v13:
+    fwd: 'AGAGTTTGATCCTGGCTCAG'
+    rev: 'ATTACCGCGGCTGCTGG'
+    length: 275
+    mismatch: 1
+    input_path: 'ipynb/data/inputs/real/v13-demux.qza'
+  v34:
+    fwd: 'CCTACGGGNGGCWGCAG'
+    rev: 'GACTACHVGGGTATCTAATCC'
+    length: 400
+    mismatch: 2
+    input_path: 'ipynb/data/inputs/real/v34-demux.qza'
+  taxonomy:
+    classifier_v34: 'ipynb/data/reference/optivag/optivag-v34-nb-classifier.qza'
+    classifier: 'ipynb/data/reference/optivag/optivag-nb-classifier.qza'
+    rep_seq: 'ipynb/data/reference/optivag/optivag-seqs.qza'
+    taxonomy: 'ipynb/data/reference/optivag/optivag-taxonomy.qza'
+    sidle_reference: 'ipynb/data/reference/optivag/optivag-seqs.qza'
+    database: greengenes
+  asv_merge:
+    tables:
+      - 'ipynb/data/output/real/by_region/v13/table.qza'
+      - 'ipynb/data/output/real/by_region/v34/table.qza'
+    sequences:
+      - 'ipynb/data/output/real/by_region/v13/rep_seqs.qza'
+      - 'ipynb/data/output/real/by_region/v34/rep_seqs.qza'
+    kmers:
+      - ipynb/data/output/real/database/v13_map.qza
+      - ipynb/data/output/real/database/v34_map.qza
+    alignment:
+      - ipynb/data/output/real/by_region/v13/sidle_alignment.qza
+      - ipynb/data/output/real/by_region/v34/sidle_alignment.qza
+
+simulation:
+  perc_identity: 0.99
+  group_size: 30
+  regions:
+    - v13
+    - v34
+    - v68
+  input_dir: 'ipynb/data/inputs/simulation'
+  ref_dir: 'ipynb/data/reference/reference'
+  taxonomy:
+    reference:
+      rep_seq: 'ipynb/data/reference/reference/gg_97.qza'
+      tree: 'ipynb/data/reference/reference/gg_97_otus_tree.qza'
+      taxonomy: 'ipynb/data/reference/reference/gg_97_taxonomy.qza'
+    sepp_reference: ipynb/data/reference/silva/sepp-refs-silva-128.qza
+    rep_seq: ipynb/data/reference/silva/silva-128-99-seqs.qza
+    taxonomy: ipynb/data/reference/silva/silva-128-99-taxonomy.qza
+    classifier: ipynb/data/reference/silva/silva-128-99-nb-classifier.qza
+    aligned_repset: ipynb/data/reference/silva/silva-128-99-aligned-seqs.qza
+    tree: ipynb/data/reference/silva/silva-128-99-tree.qza
+    sidle_reference: 'ipynb/data/output/simulation/database/filtered_reference.qza'
+    database: silva
+  asv_merge:
+    tables:
+      - ipynb/data/output/simulation/by_region/v13/table.qza
+      - ipynb/data/output/simulation/by_region/v34/table.qza
+      - ipynb/data/output/simulation/by_region/v68/table.qza
+    sequences:
+      - ipynb/data/output/simulation/by_region/v13/rep_seqs.qza
+      - ipynb/data/output/simulation/by_region/v34/rep_seqs.qza
+      - ipynb/data/output/simulation/by_region/v68/rep_seqs.qza
+    kmers:
+      - ipynb/data/output/simulation/database/v13_map.qza
+      - ipynb/data/output/simulation/database/v34_map.qza
+      - ipynb/data/output/simulation/database/v68_map.qza
+    alignment:
+      - ipynb/data/output/simulation/by_region/v13/sidle_alignment.qza
+      - ipynb/data/output/simulation/by_region/v34/sidle_alignment.qza
+      - ipynb/data/output/simulation/by_region/v68/sidle_alignment.qza
+  v13:
+    fwd: 'AGAGTTTGATCCTGGCTCAG'
+    rev: 'ATTACCGCGGCTGCTGG'
+    asv_seed: 1066
+    length: 250
+    mismatch: 1
+  v34:
+    fwd: 'GTGYCAGCMGCCGCGGTAA'
+    rev: 'GGACTACNVGGGTWTCTAAT'
+    asv_seed: 1776
+    length: 400
+    mismatch: 2
+  v68: 
+    fwd: 'CCTACGGGNGGCWGCAG'
+    rev: 'GACTACHVGGGTATCTAATCC'
+    asv_seed: 1812
+    length: 400
+    mismatch: 2
