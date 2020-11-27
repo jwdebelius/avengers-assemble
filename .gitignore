@@ -1,6 +1,7 @@
 *.DS_Store
 *dask-worker-space/*
 .snakemake/*
+ipynb/data/output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
