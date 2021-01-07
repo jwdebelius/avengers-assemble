@@ -55,55 +55,28 @@ def subsample_data(metadata, table, age_split_fun, id_prefixes,
     # Gets the age catgories 
     metadata['age_cat'] = metadata['age'].apply(age_split_fun)
     metadata.dropna(subset=['age_cat'], inplace=True)
-    print(metadata['age_cat'].value_counts())
 
     table.filter(metadata.index, axis='sample', inplace=True)
     table.add_metadata(metadata[['age_cat']].to_dict(orient='index'), axis='sample')
 
-    table1 = table.copy().filter(lambda v, id_, md: md['age_cat'] == id_prefixes[0],
-                                 axis='sample', inplace=False)
-    table2 = table.copy().filter(lambda v, id_, md: md['age_cat'] == id_prefixes[1],
-                                 axis='sample', inplace=False)
+    print(id_prefixes)
 
+    tables = [
+        table.copy().filter(lambda v, id_, md: md['age_cat'] == prefix,
+                            axis='sample', inplace=False)
+        for prefix in id_prefixes
+    ]
 
-    # Simulates set 1
-    synth1_1 = pd.concat(axis=1, sort=False, objs=[
-        build_subsample(table1, group_size, id_prefixes[0]) 
-        for i in range(n_samples)
-        ]).fillna(0)
-    synth1_1.rename(inplace=True, columns={
-        int(i): "sample.1.%s.%s" % (str(i + 1).zfill(3), id_prefixes[0])
-        for i in synth1_1. columns
-        })
-    synth1_2 = pd.concat(axis=1, sort=False, objs=[
-        build_subsample(table1, group_size, id_prefixes[0]) 
-        for i in range(n_samples)
-        ]).fillna(0)
-    synth1_2.rename(inplace=True, columns={
-        int(i): "sample.2.%s.%s" % (str(i + 1).zfill(3), id_prefixes[0])
-        for i in synth1_2.columns
-        })
+    synthetic = [
+        tidy_names(pd.concat(axis=1, objs=[
+            build_subsample(table, group_size, prefix) 
+            for i in range(n_samples)]), 
+        prefix)
+        for prefix, table in zip(*(id_prefixes, tables))
+    ]
+    print(synthetic[0].head())
 
-    synth2_1 = pd.concat(axis=1, sort=False, objs=[
-        build_subsample(table2, group_size, id_prefixes[1]) 
-        for i in range(n_samples)
-        ]).fillna(0)
-    synth2_1.rename(inplace=True, columns={
-       int(i): "sample.1.%s.%s" % (str(i + 1 + group_size).zfill(3), id_prefixes[1])
-        for i in synth2_1.columns
-        })
-    synth2_2 = pd.concat(axis=1, sort=False, objs=[
-        build_subsample(table2, group_size, id_prefixes[1]) 
-        for i in range(n_samples)
-        ]).fillna(0)
-    synth2_2.rename(inplace=True, columns={
-       int(i): "sample.2.%s.%s" % (str(i + 1 + group_size).zfill(3), id_prefixes[1])
-        for i in synth2_2.columns
-        })
-
-
-    all_samples = pd.concat(axis=1, sort=False, objs=[
-        synth1_1, synth1_2, synth2_1, synth2_2])
+    all_samples = pd.concat(axis=1, sort=False, objs=synthetic)
     all_samples.fillna(0, inplace=True)
 
     all_biom = biom.Table(data=all_samples.values, 
@@ -112,7 +85,7 @@ def subsample_data(metadata, table, age_split_fun, id_prefixes,
                           )
     metadata = pd.DataFrame.from_dict(orient='index', data={
         id_: {'set': id_.split('.')[1],
-              'age': id_.split('.')[-1],
+              'age': id_.split('.')[2],
               }
         for id_ in all_biom.ids(axis='sample')
         })
@@ -124,6 +97,11 @@ def subsample_data(metadata, table, age_split_fun, id_prefixes,
 
     return all_biom, metadata
 
+def tidy_names(table, prefix):
+    table.rename(inplace=True, columns={
+        int(i): f"sample.1.{prefix}.{i}" for i in table.columns
+        })
+    return table
 
 def build_subsample(table, sample_size, group):
     """
@@ -198,9 +176,11 @@ if __name__ == '__main__':
     def cat_age(x):
         if pd.isnull(x):
             return x
-        if x < 3:
+        if x <= 3:
             return 'infant'
-        elif (x > 20) & (x < 60):
+        elif (3 < x) & (x <= 12):
+            return 'child'
+        elif (20 < x) & (x <= 60):
             return 'adult'
         else:
             return np.nan

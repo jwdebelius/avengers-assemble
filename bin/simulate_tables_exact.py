@@ -19,7 +19,7 @@ from skbio import DNA
 from qiime2 import Artifact
 
 
-def build_regional_table(samples, seqs, read_length, depth=10000):
+def build_regional_table(samples, seqs, read_length):
     """
     Amplifies a regional table from the original table
 
@@ -58,8 +58,7 @@ def build_regional_table(samples, seqs, read_length, depth=10000):
                 samples.loc[samples[sample] > 0, sample].iteritems()])
         ).apply(lambda x: x[:read_length])
         joined_reads[sample] = expanded.value_counts()
- #         joined_reads[sample] = pd.Series(np.random.choice(expanded, depth, replace=False)
-#                                          ).value_counts()
+
     joined_table = pd.DataFrame.from_dict(orient='index', data=joined_reads).fillna(0)
     joined_table = joined_table.loc[joined_table.sum(axis=1) > 10]
     joined_reads = pd.Series({
@@ -99,11 +98,6 @@ parser.add_argument(
     type=int,
     )
 parser.add_argument(
-    '--depth',
-    help=('Depth of the final samples'),
-    default=10000,
-    )
-parser.add_argument(
     '--table',
     help=('Path to save the joined-sequence table')
     )
@@ -131,7 +125,7 @@ if __name__ == '__main__':
         np.random.seed(int(args.random))
     # fwd_table, rev_table, join_table, fwd_seqs, rev_seqs, join_seqs = \
     join_table, join_seqs = \
-        build_regional_table(table, seqs, args.read_length, depth=args.depth)
+        build_regional_table(table, seqs, args.read_length)
 
     # fwd_table.save(args.fwd_table)
     # fwd_seqs.save(args.fwd_reads)
