@@ -29,14 +29,13 @@ df <- read.csv2(args$distance_matrix, sep='\t', row.names='X')
 map <- read.csv2(args$metadata, sep='\t', row.names='sample.id')
 map <- map[row.names(df),]
 
-dm <- dist(df[row.names(map), row.names(map)])
+dm  <- dist(df[row.names(df), row.names(df)])
 
-age <- adonis2(dm ~ set + age, data=map)
+age.child <- adonis2(dm ~ age, data=map)
 
 res <- data.frame(
   age = c(age$R2[1], age$`Pr(>F)`[1], age$F[1]),
   row.names = c('R2', 'p_999', 'F')
   )
-print(res)
 
 write.table(res, file=args$output, quote=FALSE, sep='\t', col.names = NA)
