@@ -1,5 +1,6 @@
 outdir: 'ipynb/data/output'
-threads: 5
+threads: 3
+rare_iter: 5
 
 output:
   tables:
@@ -15,6 +16,10 @@ output:
     artifact:
       - taxonomy 
       - table
+      - genus-table
+      # - table-10000
+      # - genus-table-10000
+      - species-table
   trees:
     outdir: 'ipynb/data/output'
     dataset: 
@@ -22,12 +27,89 @@ output:
     method:
       - reference
       - otus 
-      - asvs 
+      # - asvs 
       - sidle
     artifact:
       - tree
+  alpha:
+    outdir: 
+      - 'ipynb/data/output'
+    dataset: 
+      - simulation
+    method:
+      - reference
+      - otus 
+      - asvs 
+      - sidle
+    table: 
+      - table-10000
+    metric:
+      - observed-features
+      - shannon
+      - pielou-e
+      - faiths-pd
+  beta:
+    sim-features:
+      outdir: 
+        - 'ipynb/data/output'
+      dataset: 
+        - simulation
+      method:
+        - reference
+        - otus 
+        - asvs 
+        - sidle
+      table: 
+        - table-10000
+      metric:
+        - braycurtis
+        - unweighted-unifrac
+        - weighted-unifrac
+      file:
+        - dm.qza
+        - pcoa.qza
+        - adonis.tsv
+
+    sim-genus:
+      outdir: 
+        - 'ipynb/data/output'
+      dataset: 
+        - simulation
+      method:
+        - reference
+        - otus 
+        - asvs 
+        - sidle
+      table:  
+        - genus-table-10000
+      metric:
+        - braycurtis
+      file:
+        - dm.qza
+        - adonis.tsv
+        - pcoa.qza
+    real:
+      outdir: 
+        - 'ipynb/data/output'
+      dataset: 
+        - real
+      method:
+        - reference
+        - otus 
+        - asvs 
+        - sidle
+      table: 
+        - species-table-10000
+      metric:
+        - braycurtis
+
+collapse:
+  genus: 5
+  species: 6
 
 real:
+  num_degen: 100
+  rare_depth: 10000
   perc_identity: 0.99
   regions:
     - v13
@@ -48,9 +130,11 @@ real:
     classifier_v34: 'ipynb/data/reference/optivag/optivag-v34-nb-classifier.qza'
     classifier: 'ipynb/data/reference/optivag/optivag-nb-classifier.qza'
     rep_seq: 'ipynb/data/reference/optivag/optivag-seqs.qza'
+    filt_rep_seq: 'ipynb/data/reference/optivag/optivag-seqs.qza'
     taxonomy: 'ipynb/data/reference/optivag/optivag-taxonomy.qza'
     sidle_reference: 'ipynb/data/reference/optivag/optivag-seqs.qza'
-    database: greengenes
+    database: none
+    class_str: '"; p__"'
   asv_merge:
     tables:
       - 'ipynb/data/output/real/by_region/v13/table.qza'
@@ -66,12 +150,15 @@ real:
       - ipynb/data/output/real/by_region/v34/sidle_alignment.qza
 
 simulation:
+  rare_depth: 10000
   perc_identity: 0.99
   group_size: 30
   regions:
     - v13
     - v34
     - v68
+  num_degen: 5
+  include: 'D_0__Bact,D_0__Arch'
   input_dir: 'ipynb/data/inputs/simulation'
   ref_dir: 'ipynb/data/reference/reference'
   taxonomy:
@@ -79,14 +166,16 @@ simulation:
       rep_seq: 'ipynb/data/reference/reference/gg_97.qza'
       tree: 'ipynb/data/reference/reference/gg_97_otus_tree.qza'
       taxonomy: 'ipynb/data/reference/reference/gg_97_taxonomy.qza'
-    sepp_reference: ipynb/data/reference/silva/sepp-refs-silva-128.qza
-    rep_seq: ipynb/data/reference/silva/silva-128-99-seqs.qza
-    taxonomy: ipynb/data/reference/silva/silva-128-99-taxonomy.qza
-    classifier: ipynb/data/reference/silva/silva-128-99-nb-classifier.qza
-    aligned_repset: ipynb/data/reference/silva/silva-128-99-aligned-seqs.qza
-    tree: ipynb/data/reference/silva/silva-128-99-tree.qza
-    sidle_reference: 'ipynb/data/output/simulation/database/filtered_reference.qza'
+    sepp_reference: ipynb/data/reference/silva-ori/sepp-refs-silva-128.qza
+    rep_seq: ipynb/data/reference/silva-ori/silva-128-99-seqs.qza
+    filt_rep_seq: 'ipynb/data/reference/silva-ori/silva-128-99-seqs-filt.qza'
+    taxonomy: ipynb/data/reference/silva-ori/silva-128-99-taxonomy.qza
+    classifier: ipynb/data/reference/silva-ori/silva-128-99-nb-classifier.qza
+    aligned_repset: ipynb/data/reference/silva-ori/silva-128-99-aligned-seqs.qza
+    tree: ipynb/data/reference/silva-ori/silva-128-99-tree.qza
+    sidle_reference: ipynb/data/reference/silva-ori/silva-128-99-seqs.qza
     database: silva
+    class_str: '"c__;"'
   asv_merge:
     tables:
       - ipynb/data/output/simulation/by_region/v13/table.qza
@@ -114,11 +203,13 @@ simulation:
     fwd: 'GTGYCAGCMGCCGCGGTAA'
     rev: 'GGACTACNVGGGTWTCTAAT'
     asv_seed: 1776
-    length: 400
-    mismatch: 2
+    length: 250
+    mismatch: 1
   v68: 
     fwd: 'CCTACGGGNGGCWGCAG'
     rev: 'GACTACHVGGGTATCTAATCC'
     asv_seed: 1812
     length: 400
     mismatch: 2
+
+    

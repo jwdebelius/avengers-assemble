@@ -6,17 +6,16 @@ import os
 import numpy as np
 
 configfile : 'config.yaml'
+ruleorder:  collapse_to_level > rarify_table
 
 rule all:
     input:
-        expand('{outdir}/{dataset}/merged/{method}/{artifact}.qza',
-               **config['output']['tables']
-               ),
-        expand('{outdir}/{dataset}/merged/{method}/{artifact}.qza',
-               **config['output']['trees']
-               ),
-        
-        # config['beta_out'],
+        "data/output/tables/table-1-alpha.tsv",
+        "data/output/tables/table_2_beta_rarefaction.tsv",
+        'data/output/figures/figure2/fig2_class_relative_abund.png',
+        'data/output/tables/table_s2_class_comparison.tsv'
+        'data/output/figures/figure3/figure2_vaginal.png'
+
 
 ###############################################################################
 #                            Gets reference dataset                           #
@@ -260,34 +259,38 @@ rule trim_posthoc:
 #                                                                             #
 ###############################################################################
 
+rule filter_silva_reference:
+    input:
+        seqs=config['simulation']['taxonomy']['rep_seq'],
+        taxa=config['simulation']['taxonomy']['taxonomy']
+    output:
+        seqs=config['simulation']['taxonomy']['filt_rep_seq'],
+    params:
+        degen=config['simulation']['num_degen'],
+        include=config['simulation']['include'],
+        tmp='tmp_filt.qza'
+    shell:
+        """
+        qiime sidle filter-degenerate-sequences \
+         --i-sequences {input.seqs} \
+         --p-max-degen {params.degen} \
+         --p-n-workers 4 \
+         --o-filtered-sequences {params.tmp}
 
-rule clean_up_database_silva:
-  input:
-    sequences=lambda w: config['simulation']['taxonomy']['rep_seq'],
-    taxonomy=lambda w: config['simulation']['taxonomy']['taxonomy']
-  output:
-    '{outdir}/simulation/database/filtered_reference.qza'
-  params:
-   '{outdir}/simulation/database/tmp-filt.qza'
-  shell:
-    """
-    qiime sidle filter-degenerate-sequences \
-     --i-sequences {input.sequences} \
-     --p-max-degen 5 \
-     --p-n-workers 2 \
-     --o-filtered-sequences {params}
+        qiime taxa filter-seqs \
+         --i-sequences {params.tmp} \
+         --i-taxonomy {input.taxa} \
+         --p-include {params.include} \
+         --p-mode "contains" \
+         --o-filtered-sequences {output.seqs} 
 
-    qiime taxa filter-seqs \
-     --i-sequences {params} \
-     --i-taxonomy {input.taxonomy} \
-     --p-exclude 'd__Eukaryota,p__uncultured,c__uncultured,p__;c__;' \
-     --p-mode contains \
-     --o-filtered-sequences {output}
-    """
+        rm {params.tmp}
+        """
+
 
 rule extract_sidle_regions:
     input:
-        lambda w: config[w.dataset]['taxonomy']['sidle_reference']
+        lambda w: config[w.dataset]['taxonomy']['filt_rep_seq']
     output:
         '{outdir}/{dataset}/database/{region}_extracted_reads.qza'
     params:
@@ -357,7 +360,7 @@ rule copy_sim_reference:
 rule classify_regional_taxonomy:
     input:
         seqs='{outdir}/real/by_region/v34/pre-rep_seqs.qza',
-        classifier=config['real']['taxonomy']['classifier_v34']
+        classifier=config['real']['taxonomy']['classifier']
     output:
         output='{outdir}/real/merged/reference/taxonomy.qza',
     shell:
@@ -376,12 +379,12 @@ rule get_real_reference_data:
         '{outdir}/real/merged/reference/table.qza',
     shell:
         """
-        qiime taxa filter-seqs \
-         --i-sequences {params} \
+        qiime taxa filter-table \
+         --i-table {input.table} \
          --i-taxonomy {input.taxonomy} \
-         --p-input ';c__' \
+         --p-include ';c__' \
          --p-mode contains \
-         --o-filtered-sequences {output}
+         --o-filtered-table {output}
         """
 
 rule get_real_representative_seqs:
@@ -432,7 +435,7 @@ rule concatenate_single_rep_seqs:
 
         tables = [Artifact.load(fp) for fp in input]
         
-        merged = q2_tables.merge_seqs(tables).merged_data
+        merged = q2_table.merge_seqs(tables).merged_data
         merged.save(str(output))
 
 
@@ -448,7 +451,7 @@ rule cluster_otus:
     input:
         table="{outdir}/{dataset}/merged/table.qza",
         seqs="{outdir}/{dataset}/merged/rep_seqs.qza",
-        ref=lambda w: config[w.dataset]['taxonomy']['rep_seq'],
+        ref=lambda w: config[w.dataset]['taxonomy']['filt_rep_seq'],
     output:
         table="{outdir}/{dataset}/merged/otus/table.qza",
         centroids="{outdir}/{dataset}/merged/otus/centroids-trimmed.qza",
@@ -518,14 +521,16 @@ rule get_asv_table:
         taxonomy='{outdir}/{dataset}/merged/asvs/taxonomy.qza',
     output:
         '{outdir}/{dataset}/merged/asvs/table.qza',
+    params:
+        lambda w: config[w.dataset]['taxonomy']['class_str']
     shell:
         """
-        qiime taxa filter-seqs \
-         --i-sequences {params} \
+        qiime taxa filter-table \
+         --i-table {input.table} \
          --i-taxonomy {input.taxonomy} \
-         --p-input ';c__' \
+         --p-include ";D_1__" \
          --p-mode contains \
-         --o-filtered-sequences {output}
+         --o-filtered-table {output}
         """
 
 rule get_asv_rep_seq:
@@ -589,9 +594,10 @@ rule align_sidle_regions:
          --i-rep-seq {input.rep_seq} \
          --p-region {params.region} \
          --p-max-mismatch {params.mismatch} \
-         --p-n-workers {params.threads} \
-         --p-chunk-size 250 \
+         --p-n-workers 4 \
+         --p-chunk-size 75 \
          --o-regional-alignment {output.alignment} \
+         --verbose
         """
 
 rule reconstruct_table_single:
@@ -611,8 +617,8 @@ rule reconstruct_table_single:
         import qiime2.plugins.sidle.actions as q2_sidle
 
         num_regions = len(params[0])
-        regions = params[:-1]
-        nworkers = params[-1]
+        regions = params[0]
+        nworkers = params[1]
 
         kmers = [Artifact.load(str(fp_)) 
                  for fp_ in input[:num_regions]]
@@ -627,7 +633,9 @@ rule reconstruct_table_single:
             regional_table=tables,
             region=regions,
             region_normalize='average',
-            n_workers=nworkers,
+            n_workers=3,
+            # n_workers=nworkers,
+            # verbose=True,
             )
 
         table.save(str(output[0]))
@@ -710,9 +718,9 @@ rule reconstructed_fragment_insertion:
 
 rule rarify_table:
     input:
-        table="{outdir}/{dataset}/merged/{method}/table.qza",
+        table="{outdir}/{dataset}/merged/{method}/{table}.qza",
     output:
-        table="{outdir}/{dataset}/merged/{method}/table-{depth}.qza",
+        table="{outdir}/{dataset}/merged/{method}/{table}-{depth}.qza",
     params:
         depth=lambda w: w.depth
     shell:
@@ -725,11 +733,12 @@ rule rarify_table:
 
 rule collapse_to_level:
     input:
-        table="{outdir}/{dataset}/merged/{method}/{table}.qza",
+        table="{outdir}/{dataset}/merged/{method}/table.qza",
+        taxonomy="{outdir}/{dataset}/merged/{method}/taxonomy.qza",
     output:
-        table="{outdir}/{dataset}/merged/{method}/{table}-tax-{level}.qza",
+        "{outdir}/{dataset}/merged/{method}/{level}-table.qza"
     params:
-        lambda w: w.level
+        collapse = lambda w: config['collapse'][w.level]
     shell:
         """
         qiime taxa collapse \
@@ -739,71 +748,60 @@ rule collapse_to_level:
          --o-collapsed-table {output}
         """
 
-############################### Alpha Diversity ###############################
-
-rule observed_features:
+rule rarefy_iteration:
     input:
-        "{sim_dir}/{context}/{combo_method}/{table}.qza"
+        table="{outdir}/{dataset}/merged/{method}/table.qza",
     output:
-        "{sim_dir}/{context}/{combo_method}/alpha-{table}/observed-features.qza",
+        table="{outdir}/{dataset}/merged/{method}/rarified/{i}.qza",
+    params:
+        depth=10000
     shell:
         """
-        qiime diversity alpha \
-         --i-table {input} \
-         --p-metric observed_features \
-         --o-alpha-diversity {output}
-        """
-
-rule shannon:
-    input:
-        "{outdir}/{dataset}/merged/{method}/{table}.qza",
-    output:
-        "{outdir}/{dataset}/merged/{method}/alpha-{table}/shannon.qza",
-    shell:
-        """
-        qiime diversity alpha \
-         --i-table {input} \
-         --p-metric shannon \
-         --o-alpha-diversity {output}
-        """
-
-rule faiths_pd:
-    input:
-        table="{outdir}/{dataset}/merged/{method}/{table}.qza",
-        tree="{outdir}/{dataset}/merged/{method}/tree.qza",
-    output:
-        "{outdir}/{dataset}/merged/{method}/alpha-{table}/faiths-pd.qza",
-    shell:
-        """
-        qiime diversity alpha-phylogenetic \
+        qiime feature-table rarefy \
          --i-table {input.table} \
-         --i-phylogeny {input.tree} \
-         --p-metric faith_pd \
-         --o-alpha-diversity {output}
+         --p-sampling-depth {params.depth} \
+         --o-rarefied-table {output.table}
         """
 
-################################# Beta Diversity ###############################
-
-
-rule braycurtis:
+# ################################# Alpha Diversity ###############################
+        
+rule alpha_iter:
     input:
-        table="{outdir}/{dataset}/merged/{method}/{table}.qza",
-    output:
-        "{outdir}/{dataset}/merged/{method}/beta-{table}/bray-curtis.qza",
-    shell:
-        """
-        qiime diversity beta \
-        --i-table {input.table} \
-        --p-metric braycurtis \
-        --o-distance-matrix {output}
-        """
-
-rule unifrac:
-    input:
-        table="{outdir}/{dataset}/merged/{method}/{table}.qza",
+        table="{outdir}/{dataset}/merged/{method}/rarified/{i}.qza",
         tree="{outdir}/{dataset}/merged/{method}/tree.qza",
     output:
-        '{outdir}/{dataset}/merged/{method}/beta-{table}/{weight}-unifrac.qza',
+        "{outdir}/{dataset}/merged/{method}/rarified-alpha/{metric}/{i}.qza",
+    params:
+        metric = lambda w: w.metric
+    run:
+        from qiime2 import Artifact
+        import qiime2.plugins.diversity.actions as q2_diversity
+
+        table = Artifact.load(str(input[0]))
+        tree = Artifact.load(str(input[1]))
+        metric = params[0]
+
+        if metric == 'faith_pd':
+            alpha = q2_diversity.alpha_phylogenetic(
+                table=table,
+                phylogeny=tree,
+                metric=metric,
+                ).alpha_diversity
+        else:
+            alpha = q2_diversity.alpha(
+                table=table,
+                metric=metric,
+                ).alpha_diversity
+        alpha.save(output[0])
+
+# ################################# Beta Diversity ###############################
+
+rule beta_phylogenetic:
+    input:
+        table="{outdir}/{dataset}/merged/{method}/rarified/{i}.qza",
+        tree="{outdir}/{dataset}/merged/{method}/tree.qza",
+    output:
+        "{outdir}/{dataset}/merged/{method}/rarified-beta/{weight}-unifrac/{i}.qza",
     params:
         metric=lambda w: '{}_unifrac'.format(w.weight)
     shell:
@@ -815,12 +813,126 @@ rule unifrac:
          --o-distance-matrix {output}
         """
 
+rule genus_braycurtis:
+    input:
+        table="{outdir}/{dataset}/merged/{method}/rarified/{i}.qza",
+        taxonomy="{outdir}/{dataset}/merged/{method}/taxonomy.qza",
+    output:
+        dm="{outdir}/{dataset}/merged/{method}/rarified-beta/genus-braycurtis/{i}.qza",
+        table="{outdir}/{dataset}/merged/{method}/rarified-genus/{i}.qza",
+    shell:
+        """
+        qiime taxa collapse \
+         --i-table {input.table} \
+         --i-taxonomy {input.taxonomy} \
+         --p-level 6 \
+         --o-collapsed-table {output.table}
+
+        qiime diversity beta \
+        --i-table {output.table} \
+        --p-metric braycurtis \
+        --o-distance-matrix {output.dm}
+        """
+
+rule braycurtis:
+    input:
+        table="{outdir}/{dataset}/merged/{method}/rarified/{i}.qza",
+
+    output:
+        "{outdir}/{dataset}/merged/{method}/rarified-beta/braycurtis/{i}.qza",
+    shell:
+        """
+        qiime diversity beta \
+        --i-table {input.table} \
+        --p-metric braycurtis \
+        --o-distance-matrix {output}
+        """
+
+
+rule adonis:
+    input:
+        dm = "{outdir}/{dataset}/merged/{method}/rarified-beta/{metric}/{i}.qza",
+        meta='{outdir}/simulation/samples/metadata.tsv',
+    output:
+        '{outdir}/{dataset}/merged/{method}/rarified-beta/{metric}-adonis/{i}.tsv'
+    params:
+        dir_="{outdir}/{dataset}/merged/{method}/rarified-beta/{metric}/{i}/dm"
+    shell:
+        """
+        qiime tools export \
+         --input-path {input.dm} \
+         --output-path {params.dir_}
+
+        Rscript bin/adonis_single.R \
+         -d {params.dir_}/distance-matrix.tsv \
+         -m {input.meta} \
+         -o {output}
+
+        rm -r {params.dir_}
+        """
+
 
 ###############################################################################
-#                                     ASVs                                    #
+#                                Results                                      #
 ###############################################################################
 #                                                                             #
-# ... 
 #                                                                             #
 ###############################################################################
 
+rule alpha_table:
+    input:
+        expand("{outdir}/simulation/merged/{method}/rarified-alpha/{metric}/{i}.qza",
+               outdir=config['output_dir'],
+               method=['reference', 'otus', 'asvs', 'sidle'],
+               metric=['observed_features', 'shannon', 'pielou_e', 'faith_pd'],
+               i=[x for x in np.arange(0, config['rare_iter'])]),
+        'data/output/simulation/samples/metadata.tsv',
+    output:
+        "data/output/tables/table-1-alpha.tsv"
+    notebook:
+        "ipynb/Table1-CompareAlpha.ipynb"
+
+rule beta_table:
+    input:
+        expand("{outdir}/{dataset}/merged/{method}/rarified-beta/{metric}/{i}.qza",
+               outdir='ipynb/data/output',
+               dataset=['simulation'],
+               method=['reference', 'otus', 'asvs', 'sidle'],
+               metric=['braycurtis', 'genus-braycurtis', 'unweighted-unifrac', 'weighted-unifrac'],
+               i=[x for x in np.arange(0, config['rare_iter'])]
+               ),
+        expand('{outdir}/{dataset}/merged/{method}/rarified-beta/{metric}-adonis/{i}.tsv',
+               outdir='ipynb/data/output',
+               dataset=['simulation'],
+               method=['reference', 'otus', 'asvs', 'sidle'],
+               metric=['braycurtis', 'genus-braycurtis', 'unweighted-unifrac', 'weighted-unifrac'],
+               i=[x for x in np.arange(0, config['rare_iter'])]
+               ),
+        'data/output/simulation/samples/metadata.tsv',
+    output:
+        "data/output/tables/table_2_beta_rarefaction.tsv"
+    notebook:
+        "Table2-CompareBeta.ipynb"
+
+rule compare_taxonomy:
+    input:
+        'data/output/simulation/samples/metadata.tsv',
+        expand('{outdir}/{dataset}/merged/{method}/{artifact}.qza',
+               **config['output']['tables']
+               ),
+    output:
+        'data/output/figures/figure2/fig2_class_relative_abund.png',
+        'data/output/tables/table_s2_class_comparison.tsv'
+    notebook:
+        'ipynb/Figure1-Taxonomy.ipynb'
+
+rule real_data_figure:
+    input:
+        expand('{outdir}/{dataset}/merged/{method}/{artifact}.qza',
+               **config['output']['tables']
+               ),
+        'data/inputs/real/manifest-v13.tsv',
+    output:
+        'data/output/figures/figure3/figure2_vaginal.png'
+    notebook:
+        'ipynb/Figure2-RealData.ipynb'

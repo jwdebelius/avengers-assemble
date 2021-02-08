@@ -31,7 +31,7 @@ map <- map[row.names(df),]
 
 dm  <- dist(df[row.names(df), row.names(df)])
 
-age.child <- adonis2(dm ~ age, data=map)
+age <- adonis2(dm ~ age, data=map)
 
 res <- data.frame(
   age = c(age$R2[1], age$`Pr(>F)`[1], age$F[1]),
