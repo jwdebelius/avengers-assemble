@@ -17,8 +17,6 @@ output:
       - taxonomy 
       - table
       - genus-table
-      # - table-10000
-      # - genus-table-10000
       - species-table
   trees:
     outdir: 'ipynb/data/output'
@@ -108,31 +106,39 @@ collapse:
   species: 6
 
 real:
-  num_degen: 100
+  num_degen: 3
   rare_depth: 10000
   perc_identity: 0.99
   regions:
     - v13
     - v34
   v13:
+    input_dir: 'ipynb/data/inputs/real/seqs'
+    input_format: '{pos}__101_NoLIMS_MOPP_OptiVag__Pool{pool}_{rep}_V1V3Old_2step_R{dir}.fastq.gz'
+    joined: False
     fwd: 'AGAGTTTGATCCTGGCTCAG'
     rev: 'ATTACCGCGGCTGCTGG'
     length: 275
     mismatch: 1
     input_path: 'ipynb/data/inputs/real/v13-demux.qza'
+
   v34:
     fwd: 'CCTACGGGNGGCWGCAG'
     rev: 'GACTACHVGGGTATCTAATCC'
     length: 400
     mismatch: 2
-    input_path: 'ipynb/data/inputs/real/v34-demux.qza'
+    input_dir: 'ipynb/data/inputs/real/seqs'
+    input_format: '{pos}__101_NoLIMS_MOPP_OptiVag__Pool{pool}_{rep}_V34_2step_R{dir}.fastq.gz'
   taxonomy:
+    rep_seq: 'ipynb/data/reference/reference/gg_97.qza'
+    taxonomy: 'ipynb/data/reference/reference/gg_97_taxonomy.qza'
+    filt_rep_seq: 'ipynb/data/reference/reference/gg_97-filt.qza'
     classifier_v34: 'ipynb/data/reference/optivag/optivag-v34-nb-classifier.qza'
     classifier: 'ipynb/data/reference/optivag/optivag-nb-classifier.qza'
-    rep_seq: 'ipynb/data/reference/optivag/optivag-seqs.qza'
-    filt_rep_seq: 'ipynb/data/reference/optivag/optivag-seqs.qza'
-    taxonomy: 'ipynb/data/reference/optivag/optivag-taxonomy.qza'
-    sidle_reference: 'ipynb/data/reference/optivag/optivag-seqs.qza'
+    # rep_seq: 'ipynb/data/reference/optivag/optivag-seqs.qza'
+    # filt_rep_seq: 'ipynb/data/reference/optivag/optivag-seqs.qza'
+    # taxonomy: 'ipynb/data/reference/optivag/optivag-taxonomy.qza'
+    sidle_reference: 'ipynb/data/reference/reference/gg_97-filt.qza'
     database: none
     class_str: '"; p__"'
   asv_merge:
@@ -159,6 +165,7 @@ simulation:
     - v68
   num_degen: 5
   include: 'D_0__Bact,D_0__Arch'
+  exclude: 'k__'
   input_dir: 'ipynb/data/inputs/simulation'
   ref_dir: 'ipynb/data/reference/reference'
   taxonomy:
@@ -213,3 +220,36 @@ simulation:
     mismatch: 2
 
     
+benchmark: 
+  num_degen: 3
+  include: 'k_'
+  exclude: 'p__;'
+  taxonomy:
+    rep_seq: 'ipynb/data/reference/reference/gg_97.qza'
+    tree: 'ipynb/data/reference/reference/gg_97_otus_tree.qza'
+    taxonomy: 'ipynb/data/reference/reference/gg_97_taxonomy.qza'
+    filt_rep_seq: 'ipynb/data/reference/reference/gg_97_3_degen.qza'
+  74f_315r:
+    fwd: TGGCGGACGGGTGAGTAA
+    rev: CTGCTGCCTCCCGTAGGA
+    length: 215
+  316f_484r:
+    fwd: TCCTACGGGAGGCAGCAG
+    rev: TATTACCGCGGCTGCTGG
+    length: 125
+  486f_650r:
+    fwd: CAGCAGCCGCGGTAATAC
+    rev: CGCATTTCACCGCTACAC
+    length: 125
+  752f_911r:
+    fwd: AGGATTAGATACCCTGGT
+    rev: GAATTAAACCACATGCTC
+    length: 125
+  901f_1057r:
+    fwd: GCACAAGCGGTGGAGCAT
+    rev: CGCTCGTTGCGGGACTTA
+    length: 125
+  1143f_1336r:
+    fwd: AGGAAGGTGGGGATGACG
+    rev: CCCGGGAACGTATTCACC
+    length: 175
