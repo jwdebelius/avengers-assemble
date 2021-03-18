@@ -5,9 +5,9 @@ This repository contains the analysis workflow for Debelius et al (doi: []()).
 
 ## Installation
 
-The analysis was done based on a qiime2-2020.11 enviroment with [RESRIPt](https://github.com/bokulich-lab/RESCRIPt) and [q2-sidle](https://q2-sidle.readthedocs.io/en/latest/) installed. 
+The analysis was done based on a qiime2-2020.11 environment with [RESRIPt](https://github.com/bokulich-lab/RESCRIPt) and [q2-sidle](https://q2-sidle.readthedocs.io/en/latest/) installed. 
 
-To build this enviroment, install [qiime2-202011](https://docs.qiime2.org/2020.11/install/) according to your system requirements. Then, follow the [q2-sidle](https://docs.qiime2.org/2020.11/install/) installation instructions. You will also need snakemake > 5.3.
+To build this environment, install [qiime2-202011](https://docs.qiime2.org/2020.11/install/) according to your system requirements. Then, follow the [q2-sidle](https://docs.qiime2.org/2020.11/install/) installation instructions. You will also need snakemake > 5.3.
 
 ```bash
 conda install --channel bioconda snakemake=5.3
@@ -31,17 +31,17 @@ qiime tools import \
 
 ```
 
-And placed in the folder specified as the the config file (`input_dir` under `simulation`). (By default, this folder is `ipynb/data/inputs/simulation`).
+And placed in the folder specified as the config file (`input_dir` under `simulation`). (By default, this folder is `ipynb/data/inputs/simulation`).
 
 The metadata should also be downloaded from the qiita study (found under the sample information tab), and renamed to `start-metadata.txt` and moved to the simulation input folder `ipynb/data/inputs/simulation`.
 
 ### Real Data
 
-Real data can be downloaded from ENA study [PRJEB37382](https://www.ebi.ac.uk/ena/browser/view/PRJEB37382), accessions ERR4704801-ERR4704848. The should be placed in the location specified in the config file. By default, they are expected in the `ipynb/data/inputs/real/seqs` directory. Metadata is infered from the filenames. 
+Real data can be downloaded from ENA study [PRJEB37382](https://www.ebi.ac.uk/ena/browser/view/PRJEB37382), accessions ERR4704801-ERR4704848. The should be placed in the location specified in the config file. By default, they are expected in the `ipynb/data/inputs/real/seqs` directory. Metadata is inferred from the filenames. 
 
 ### Database Files
 
-The analysis is currently based on the Silva 128 QIIME release, avaliable [here](https://www.arb-silva.de/fileadmin/silva_databases/qiime/Silva_128_release.tgz). The files should be imported into QIIME 2 and saved to the `ipynb/data/reference/silva-ori/` folder. The SEPP reference tree can be download from the [qiime2 resources page](https://data.qiime2.org/2021.2/common/sepp-refs-silva-128.qza). The formatted Optivag and Greengenes databases are already in the repository.
+The analysis is currently based on the Silva 128 QIIME release, available [here](https://www.arb-silva.de/fileadmin/silva_databases/qiime/Silva_128_release.tgz). The files should be imported into QIIME 2 and saved to the `ipynb/data/reference/silva-ori/` folder. The SEPP reference tree can be downloaded from the [qiime2 resources page](https://data.qiime2.org/2021.2/common/sepp-refs-silva-128.qza). The formatted Optivag and Greengenes databases are already in the repository.
 
 
 ## Running the workflow
@@ -56,14 +56,14 @@ snakemake
 
 ### Simulation
 
-1. **Reference Simulation**. The greengenes database is used to filter the reference OTU table to exclude sequences with more than 5 degenerates, and then a reference dataset is simulated from the original data by averaging abudnace across multiple individuals of the same age group.
+1. **Reference Simulation**. The greengenes database is used to filter the reference OTU table to exclude sequences with more than 5 degenerates, and then a reference dataset is simulated from the original data by averaging abundance across multiple individuals of the same age group.
 	* `filter_degenerete_reference`
 	* `filter_ref_table`
 	* `simulate_reference_samples`
-2. **Regional Simulation**. Regions of the 16s gene are extracted and combined with the full length reference table to build a regional "ASV" table and representative sequence set. These are the starting point for our three test methods.
+2. **Regional Simulation**. Regions of the 16s gene are extracted and combined with the full length reference table to build a regional "ASV" table and representative sequence set. These are the starting points for our three test methods.
 	* `extract_regions`
 	* `generate_asvs_and_derep_tables`
-3. **Database Preperation**. The database is prepared by filtering to remove squences with a large number of degenerate nucleotides from the reference and database sequences which do not have class-level annotations. These are used to generate per-region 
+3. **Database Preparation**. The database is prepared by filtering to remove sequences with a large number of degenerate nucleotides from the reference and database sequences which do not have class-level annotations. These are used to generate per-region 
 	* `filter_silva_reference`
 	* `extract_sidle_regions`
 	* `prepare_extracted_region`
@@ -75,7 +75,7 @@ snakemake
 	* `cluster_otus`
 	* `get_otu_tree`
 	* `get_otu_taxonomy`
-6. **ASV denosing**. The table is generated by merging all ASV counts. Taxonomy comes from naive baysian classifiation of all sequences; sequences which don't have phylum level annotation are excluded. The tree is built by fragment insertion of the merged sequences
+6. **ASV denosing**. The table is generated by merging all ASV counts. Taxonomy comes from naive bayesian classification of all sequences; sequences which don't have phylum level annotation are excluded. The tree is built by fragment insertion of the merged sequences
 	* `concatenate_single_asv_counts`
 	* `concatenate_single_rep_seqs`
 	* `classify_taxonomy`
@@ -89,7 +89,7 @@ snakemake
 	* `reconstruct_fragments_single`
 	* `reconstructed_fragment_insertion`
 
-7. **Alpha Diversity**. Within sample (alpha) diversity is calculcated from multiple rarefaction. We look at observed features, shannon, pielou's evenness and faith's diversity. The results are summarized using the `Table1-CompareAlpha.ipynb` notebook. This generated Table 1.
+7. **Alpha Diversity**. Within sample (alpha) diversity is calculated from multiple rarefaction. We look at observed features, Shannon, Pielou's evenness and faith's diversity. The results are summarized using the `Table1-CompareAlpha.ipynb` notebook. This generated Table 1.
 	* `rarefy_iteration`
 	* `alpha_iter`
 	* `alpha_table`
@@ -107,7 +107,7 @@ snakemake
 
 ### Real Data Analysis
 
-1. **Data Preperation**. We import the sequences into QIIME 2, and then denoise them using dada2 before denosing the sequences.
+1. **Data Preparation**. We import the sequences into QIIME 2, and then denoise them using dada2 before denoising the sequences.
 	* `build_manifest`
 	* `import_seqs`
 	* `trim_data_v13`
@@ -116,12 +116,12 @@ snakemake
 	* `denoise_v34`
 	* `trim_posthoc`
 
-2. **Database Preperation**. For benchmarking the greengenes database needs to be prepared (`filter_greengenes_reference`), otherwise, the Optivag database is assumed to be tidied. Then, we extract the regions and prepare them from sidle alignmnet.
+2. **Database Preparation**. For benchmarking the greengenes database needs to be prepared (`filter_greengenes_reference`), otherwise, the Optivag database is assumed to be tidied. Then, we extract the regions and prepare them from sidle alignment.
 	* `filter_greengenes_reference`
 	* `extract_sidle_regions`
 	* `prepare_extracted_region`
 
-3. **Reference Reconstruction**. The V34 region alone was used as the reference for the simulation. We used the paired end table, classified the taxonomy using a naive baysian classifier for the full length sequences, and then filtered the table to remove anything missing a phylum level or kingdom level designation.
+3. **Reference Reconstruction**. The V34 region alone was used as the reference for the simulation. We used the paired end table, classified the taxonomy using a naive bayesian classifier for the full length sequences, and then filtered the table to remove anything missing a phylum level or kingdom level designation.
 	* `classify_regional_taxonomy`
 	* `get_real_reference_data`
 	* `get_real_representative_seqs`
@@ -130,7 +130,7 @@ snakemake
 	* `concatenate_single_rep_seqs`
 	* `cluster_otus`
 	* `get_otu_taxonomy`
-6. **ASV denosing**. The table is generated by merging all ASV counts. Taxonomy comes from naive baysian classifiation of all sequences; sequences which don't have phylum level annotation are excluded. The tree is built by fragment insertion of the merged sequences
+6. **ASV denosing**. The table is generated by merging all ASV counts. Taxonomy comes from naive bayesian classification of all sequences; sequences which don't have phylum level annotation are excluded. The tree is built by fragment insertion of the merged sequences
 	* `concatenate_single_asv_counts`
 	* `concatenate_single_rep_seqs`
 	* `classify_taxonomy`
@@ -142,9 +142,11 @@ snakemake
 	* `reconstruct_table_single`
 	* `reconstruct_taxonomy`
 
-7. **Data Synthesis**. The taxonomic annotation was checked and the tables evlauated using the `ipynb/Figure2-RealData.ipynb` notebook.
+7. **Data Synthesis**. The taxonomic annotation was checked and the tables evaluated using the `ipynb/Figure2-RealData.ipynb` notebook.
 	* `real_data_figure`
 
 ## Benchmarking
 
 The snake file contains a section dedicated to preparing the sidle reads, and it will output a table. This will generate a series of benchmarking files, in the benchmark folder. The `Matlab` folder contains the modified m scripts to run with SMURF.
+
+
