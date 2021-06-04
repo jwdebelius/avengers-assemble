@@ -1,6 +1,6 @@
 # Avengers Assemble
 
-This repository contains the analysis workflow for Debelius et al (doi: []()). 
+This repository contains the analysis workflow for Debelius et al (doi: [10.1101/2021.03.23.436606](https://www.biorxiv.org/content/10.1101/2021.03.23.436606v1)). 
 
 
 ## Installation
