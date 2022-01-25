@@ -4,7 +4,9 @@
 ipynb/data/output
 ipynb/data/inputs/real
 ipynv/data/inputs/sim*
-ipynb/data/reference/silva*
+ipynb/data/reference/*
+ipynb/data/inputs/*
+ipynb/dask-worker-space/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
