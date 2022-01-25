@@ -35,11 +35,19 @@ And placed in the folder specified as the config file (`input_dir` under `simula
 
 The metadata should also be downloaded from the qiita study (found under the sample information tab), and renamed to `start-metadata.txt` and moved to the simulation input folder `ipynb/data/inputs/simulation`.
 
-### Real Data
+### Vaginal Community Data
 
-Real data can be downloaded from ENA study [PRJEB37382](https://www.ebi.ac.uk/ena/browser/view/PRJEB37382), accessions ERR4704801-ERR4704848. The should be placed in the location specified in the config file. By default, they are expected in the `ipynb/data/inputs/real/seqs` directory. Metadata is inferred from the filenames. 
+Vaginal data can be downloaded from ENA study [PRJEB37382](https://www.ebi.ac.uk/ena/browser/view/PRJEB37382), accessions ERR4704801-ERR4704848. The should be placed in the location specified in the config file. By default, they are expected in the `ipynb/data/inputs/vaginal/seqs` directory. Metadata is inferred from the filenames. 
 
-### Database Files
+### Mock Community Data
+
+Mock community data 
+
+### Benchmarking Data
+
+
+
+<!--### Database Files
 
 The analysis is currently based on the Silva 128 QIIME release, available [here](https://www.arb-silva.de/fileadmin/silva_databases/qiime/Silva_128_release.tgz). The files should be imported into QIIME 2 and saved to the `ipynb/data/reference/silva-ori/` folder. The SEPP reference tree can be downloaded from the [qiime2 resources page](https://data.qiime2.org/2021.2/common/sepp-refs-silva-128.qza). The formatted Optivag and Greengenes databases are already in the repository.
 
@@ -150,3 +158,4 @@ snakemake
 The snake file contains a section dedicated to preparing the sidle reads, and it will output a table. This will generate a series of benchmarking files, in the benchmark folder. The `Matlab` folder contains the modified m scripts to run with SMURF.
 
 
+-->
